@@ -1,0 +1,1454 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>R8 夏休みの記録【高３組】</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts Inter & Noto Sans JP -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Noto Sans JP', 'Inter', sans-serif;
+    }
+    .custom-gradient {
+      background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+    }
+    .timeline-img-btn {
+      max-width: 150px;
+      max-height: 150px;
+      object-fit: cover;
+      cursor: pointer;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body class="bg-amber-50/40 text-slate-800 min-h-screen pb-12">
+
+  <!-- トップバー (バージョン59 完全再現) -->
+  <header class="bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md sticky top-0 z-50 px-4 py-3">
+    <div class="max-w-4xl mx-auto flex justify-between items-center">
+      <div class="flex items-center gap-2">
+        <span class="bg-white/20 p-1.5 rounded-lg"><i class="fa-solid fa-sun text-lg"></i></span>
+        <h1 class="text-sm md:text-base font-black tracking-wider">R8 夏休みの記録【高３組】</h1>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="text-[11px] bg-white/20 px-3 py-1 rounded-full font-bold flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+          <span>アカウント不要・かんたんモード</span>
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <!-- 全体ラッパー -->
+  <main class="max-w-4xl mx-auto px-4 mt-6">
+
+    <!-- ウェルカムバナー (バージョン59 完全再現 ＋ タイトル修正) -->
+    <div class="bg-gradient-to-br from-amber-400 via-orange-400 to-amber-500 rounded-3xl p-6 text-white shadow-lg space-y-1 relative overflow-hidden mb-6">
+      <div class="absolute right-0 bottom-0 translate-x-4 translate-y-4 text-white/10 text-9xl font-bold"><i class="fa-solid fa-umbrella-beach"></i></div>
+      <p class="text-xs font-bold text-amber-100 uppercase tracking-widest">SUMMER VACATION DIARY</p>
+      <h2 class="text-xl md:text-2xl font-black">夏休みの生活きろく ＆ 写真・ひとこと日記フォーム</h2>
+      <p class="text-xs text-white/90">ログインは不要です。お名前をえらんで、きろくをいれて「提出」ボタンをおしてね！</p>
+    </div>
+
+    <!-- お名前パスコード入力モーダル(ポップアップ) -->
+    <div id="password-modal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+      <div class="bg-white p-6 rounded-2xl max-w-sm w-full space-y-4 shadow-2xl border border-amber-100">
+        <h3 class="font-black text-slate-800 text-sm flex items-center gap-1.5">
+          <i class="fa-solid fa-lock text-amber-500"></i> パスコードを入力してください
+        </h3>
+        <input type="text" id="password-input" placeholder="教員パスコード (txv4711など)" class="w-full bg-slate-50 border-2 p-3 rounded-xl font-bold text-slate-800 outline-none focus:border-amber-400 transition text-xs">
+        <div class="flex gap-2 justify-end text-xs">
+          <button onclick="closePasswordModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold px-4 py-2 rounded-xl transition">キャンセル</button>
+          <button onclick="verifyPassword()" class="bg-amber-500 hover:bg-amber-600 text-white font-black px-4 py-2 rounded-xl shadow-md transition">確認</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 提出フォーム -->
+    <div class="bg-white rounded-3xl border border-slate-100 shadow-xl p-5 md:p-6 space-y-6">
+      <div class="border-b pb-3 flex justify-between items-center border-slate-100">
+        <h3 class="font-black text-slate-800 flex items-center gap-2 text-sm md:text-base">
+          <i class="fa-solid fa-pen-fancy text-amber-500"></i> きょうの生活記録（せいかつきろく）
+        </h3>
+        <span class="text-[10px] font-bold bg-amber-50 text-amber-700 px-2.5 py-1 rounded-full border border-amber-200">他の生徒には非公開</span>
+      </div>
+
+      <form id="diary-form" onsubmit="submitHomework(event)" class="space-y-5 text-xs md:text-sm">
+        
+        <!-- 1. お名前選択 (バージョン59仕様 ＋ 名寄せ・重複教員徹底排除) -->
+        <div>
+          <label class="block font-black text-slate-700 mb-2 flex items-center gap-1.5">
+            <i class="fa-solid fa-circle-user text-amber-500"></i> 1. だれのきろくですか？（お名前を選びましょう）
+          </label>
+          <select id="student-name-select" onchange="syncStudentSelection()" class="w-full bg-slate-50 border-2 border-amber-200 p-3 rounded-2xl font-bold text-slate-800 outline-none focus:border-amber-400 transition">
+            <option value="" disabled selected>▼ お名前を選んでください</option>
+            <!-- JSでマスタから動的生成（s始まり生徒8名のみ） -->
+          </select>
+        </div>
+
+        <!-- 2. 日付選択 -->
+        <div>
+          <label class="block font-black text-slate-700 mb-2 flex items-center gap-1.5">
+            <i class="fa-solid fa-calendar-day text-amber-500"></i> 2. 何日（なんにち）のきろくですか？
+          </label>
+          <input type="date" id="diary-date" required class="w-full bg-slate-50 border border-slate-200 p-3 rounded-2xl font-bold text-slate-800 outline-none focus:border-amber-400 transition">
+        </div>
+
+        <!-- 3. 生活リズムセクション (先生にのみ公開) -->
+        <div class="bg-amber-50/40 p-4 rounded-2xl border border-amber-100/60 space-y-4">
+          <h4 class="font-black text-amber-800 flex items-center gap-1.5 text-xs">
+            <i class="fa-solid fa-heart-pulse"></i> 生活リズム（先生にのみ公開）
+          </h4>
+
+          <div>
+            <label class="block font-bold text-slate-700 mb-1.5">昨日は何時に寝ましたか？</label>
+            <select id="sleep-time-select" class="w-full bg-white border border-slate-200 p-2.5 rounded-xl font-bold text-slate-800">
+              <option>PM８時～PM10時の間</option>
+              <option>PM10時～AM０時の間</option>
+              <option>AM０時～AM２時の間</option>
+              <option>AM２時よりも後</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 mb-1.5">今日は何時に起きましたか？</label>
+            <select id="wake-time-select" class="w-full bg-white border border-slate-200 p-2.5 rounded-xl font-bold text-slate-800">
+              <option>AM５時よりも前</option>
+              <option>AM５時～AM７時の間</option>
+              <option>AM７時～AM９時の間</option>
+              <option>AM９時よりも後</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 mb-1.5">いまの気分（きぶん）はどうですか？</label>
+            <div class="flex items-center justify-between bg-white p-3 rounded-xl border border-slate-200">
+              <span class="text-slate-400 font-bold">少し元気ない</span>
+              <div class="flex gap-4">
+                <label class="flex flex-col items-center gap-1 cursor-pointer">
+                  <input type="radio" name="mood-radio" value="1" class="text-amber-500">
+                  <span class="font-bold text-[10px]">1</span>
+                </label>
+                <label class="flex flex-col items-center gap-1 cursor-pointer">
+                  <input type="radio" name="mood-radio" value="2" class="text-amber-500">
+                  <span class="font-bold text-[10px]">2</span>
+                </label>
+                <label class="flex flex-col items-center gap-1 cursor-pointer">
+                  <input type="radio" name="mood-radio" value="3" checked class="text-amber-500">
+                  <span class="font-bold text-[10px]">3</span>
+                </label>
+                <label class="flex flex-col items-center gap-1 cursor-pointer">
+                  <input type="radio" name="mood-radio" value="4" class="text-amber-500">
+                  <span class="font-bold text-[10px]">4</span>
+                </label>
+                <label class="flex flex-col items-center gap-1 cursor-pointer">
+                  <input type="radio" name="mood-radio" value="5" class="text-amber-500">
+                  <span class="font-bold text-[10px]">5</span>
+                </label>
+              </div>
+              <span class="text-amber-600 font-bold">とても元気！</span>
+            </div>
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 mb-1.5">スマホ・タブレット端末はどのくらいしましたか？</label>
+            <select id="screen-time-select" class="w-full bg-white border border-slate-200 p-2.5 rounded-xl font-bold text-slate-800">
+              <option>１時間まで</option>
+              <option>１時間～２時間の間</option>
+              <option>２時間～３時間の間</option>
+              <option>３時間～４時間の間</option>
+              <option>４時間以上</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 mb-1.5">家の仕事や手伝いは、何をしましたか？</label>
+            <select id="help-select" class="w-full bg-white border border-slate-200 p-2.5 rounded-xl font-bold text-slate-800">
+              <option>していない</option>
+              <option>しょっきのじゅんび・かたづけ</option>
+              <option>そうじ（風呂、掃除機、モップなど）</option>
+              <option>せんたく（干す、たたむ、入れるなど）</option>
+              <option>ごはんをつくる・てつだう</option>
+              <option>その他のお手伝い</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 mb-1.5">体を動かしましたか？（うんどう）</label>
+            <select id="exercise-select" class="w-full bg-white border border-slate-200 p-2.5 rounded-xl font-bold text-slate-800">
+              <option>していない</option>
+              <option>ストレッチ</option>
+              <option>さんぽ・ウォーキング</option>
+              <option>ラジオたいそう</option>
+              <option>ダンス（動画やゲームなど）</option>
+              <option>その他の運動</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 4. 絵日記セクション (カメラロール・撮影から直接アップロード) -->
+        <div class="space-y-4">
+          <h4 class="font-black text-slate-800 flex items-center gap-1.5">
+            <i class="fa-solid fa-images text-amber-500"></i> 絵日記（クラスに公開）
+          </h4>
+
+          <div>
+            <label class="block font-bold text-slate-700 mb-1.5">今日の一枚 (スマホで写真を撮る、またはアルバムから選択)</label>
+            <input type="file" id="image-file-input" accept="image/*" class="hidden" onchange="previewSelectedImage(event)">
+            <button type="button" onclick="triggerFileInput()" class="w-full bg-gradient-to-r from-orange-400 to-amber-500 hover:from-orange-500 hover:to-amber-600 text-white font-bold py-3 px-4 rounded-2xl flex items-center justify-center gap-2 shadow-md transition active:scale-95 text-xs">
+              <i class="fa-solid fa-camera"></i>
+              <span id="upload-btn-text">📸 写真を撮る・アルバムから選択</span>
+            </button>
+            <span id="selected-file-disp" class="text-[10px] text-slate-400 font-bold mt-1.5 block">選択されていません (空欄でも送信できます)</span>
+            
+            <!-- プレビュー枠 -->
+            <div id="preview-container" class="hidden mt-3 max-w-sm mx-auto border-2 border-dashed border-amber-200 p-2 rounded-2xl bg-amber-50/20 text-center">
+              <img id="image-preview-element" src="" class="max-h-48 rounded-xl mx-auto border">
+              <button type="button" onclick="clearSelectedImage()" class="mt-2 text-[10px] bg-red-100 hover:bg-red-200 text-red-700 font-bold px-3 py-1 rounded-full transition">キャンセル</button>
+            </div>
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 mb-1.5">日記（にっき）をひとこと！</label>
+            <textarea id="diary-text" rows="3" placeholder="きょうあったことや、おもったことをかきましょう！" required class="w-full bg-slate-50 border border-slate-200 p-3 rounded-xl font-bold text-slate-800 outline-none focus:border-amber-400 transition text-xs"></textarea>
+          </div>
+        </div>
+
+        <!-- 提出ボタン -->
+        <button type="submit" id="submit-btn" class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-black py-4 rounded-2xl shadow-lg shadow-emerald-500/10 active:scale-95 transition flex items-center justify-center gap-2">
+          <i class="fa-solid fa-paper-plane"></i>
+          <span>生活記録と絵日記を提出する</span>
+        </button>
+      </form>
+    </div>
+
+    <!-- 生徒個別グラフエリア (名前選択時に自動スライドイン) -->
+    <div id="personal-report-area" class="hidden bg-white rounded-3xl border border-slate-100 shadow-xl p-5 md:p-6 space-y-6 mt-6">
+      <div class="border-b pb-3">
+        <h3 class="font-black text-slate-800 flex items-center gap-2 text-sm md:text-base">
+          <i class="fa-solid fa-chart-line text-indigo-500"></i> <span id="report-student-title">生徒</span> さんの生活リズムレポート
+        </h3>
+        <p class="text-[10px] text-slate-400 font-bold mt-1">過去に提出した日々の記録が自動で集計され、グラフに反映されます。</p>
+      </div>
+
+      <!-- 4つの折れ線グラフ (就寝、起床、気分、スマホ) -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="bg-slate-50 p-3.5 rounded-2xl border border-slate-100 shadow-sm space-y-2">
+          <p class="text-xs font-black text-indigo-950 flex items-center gap-1"><i class="fa-solid fa-bed"></i> 就寝時刻の推移 (上＝早い時間帯)</p>
+          <div class="h-40 relative"><canvas id="mySleepChart"></canvas></div>
+        </div>
+        <div class="bg-slate-50 p-3.5 rounded-2xl border border-slate-100 shadow-sm space-y-2">
+          <p class="text-xs font-black text-emerald-950 flex items-center gap-1"><i class="fa-solid fa-mug-saucer"></i> 起床時刻の推移 (上＝早い時間帯)</p>
+          <div class="h-40 relative"><canvas id="myWakeChart"></canvas></div>
+        </div>
+        <div class="bg-slate-50 p-3.5 rounded-2xl border border-slate-100 shadow-sm space-y-2">
+          <p class="text-xs font-black text-amber-950 flex items-center gap-1"><i class="fa-solid fa-smile-beam"></i> いまの気分の推移 (上＝元気！)</p>
+          <div class="h-40 relative"><canvas id="myMoodChart"></canvas></div>
+        </div>
+        <div class="bg-slate-50 p-3.5 rounded-2xl border border-slate-100 shadow-sm space-y-2">
+          <p class="text-xs font-black text-purple-950 flex items-center gap-1"><i class="fa-solid fa-mobile-screen"></i> スマホ・タブレット (下＝短い時間)</p>
+          <div class="h-40 relative"><canvas id="myScreenChart"></canvas></div>
+        </div>
+      </div>
+
+      <!-- 2つの割合円グラフ (手伝い、運動) -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+        <div class="bg-slate-50 p-3.5 rounded-2xl border border-slate-100 shadow-sm space-y-2">
+          <p class="text-xs font-black text-rose-950 flex items-center gap-1"><i class="fa-solid fa-hand-holding-heart"></i> お手伝いの種類と割合</p>
+          <div class="h-48 relative"><canvas id="myHelpChart"></canvas></div>
+        </div>
+        <div class="bg-slate-50 p-3.5 rounded-2xl border border-slate-100 shadow-sm space-y-2">
+          <p class="text-xs font-black text-teal-950 flex items-center gap-1"><i class="fa-solid fa-person-running"></i> 運動の種類と割合</p>
+          <div class="h-48 relative"><canvas id="myExerciseChart"></canvas></div>
+        </div>
+      </div>
+
+      <!-- 個人過去の履歴 -->
+      <div class="space-y-4 pt-4 border-t border-slate-100">
+        <h3 class="font-black text-slate-800 flex items-center gap-2 text-xs md:text-sm">
+          <i class="fa-solid fa-clock-rotate-left text-teal-500"></i> あなたの過去（かこ）の提出履歴
+        </h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr class="bg-slate-50 text-slate-500 border-b border-slate-100">
+                <th class="p-3 font-bold">日付</th>
+                <th class="p-3 font-bold">起きる / 寝る</th>
+                <th class="p-3 font-bold">気分 / スマホ</th>
+                <th class="p-3 font-bold">お手伝い / 運動</th>
+                <th class="p-3 font-bold">先生のはなまるコメント</th>
+              </tr>
+            </thead>
+            <tbody id="student-history-table">
+              <!-- 読み込まれた履歴 -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 教員用ダッシュボード (先生専用。パスコード照合時にアンバー・インディゴ調で立ち上がる) -->
+    <div id="teacher-container" class="hidden mt-6 space-y-6">
+      <div class="bg-slate-900 text-white p-6 rounded-3xl shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <span class="text-[10px] bg-indigo-500 text-white px-2.5 py-0.5 rounded-full font-bold">教員専用管理画面</span>
+          <h2 class="text-lg md:text-xl font-black mt-1 flex items-center gap-2">
+            <i class="fa-solid fa-chart-line text-indigo-400"></i> 高３組・生活指導カルテ
+          </h2>
+          <p class="text-[11px] text-slate-400 font-bold mt-0.5">クラス全体の生活状況・運動状況と個別のはなまる指導を行えます。</p>
+        </div>
+        <div class="flex gap-2">
+          <span class="bg-slate-800 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-300">
+            総提出数: <strong id="teacher-total-submissions" class="text-indigo-400 text-sm">--</strong> 件
+          </span>
+        </div>
+      </div>
+
+      <!-- 教員用：個別生徒の比較カルテ (3カラム構成) -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        <!-- 左：カルテ詳細パネル -->
+        <div class="md:col-span-1 bg-white p-4 rounded-3xl border border-slate-100 shadow-md space-y-4">
+          <div>
+            <label class="block text-xs font-black text-slate-700 mb-1">カルテ表示生徒切り替え</label>
+            <select id="teacher-student-selector" onchange="showSpecificStudentHistory()" class="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-xl font-bold text-xs">
+              <option value="all">全員の提出履歴</option>
+              <!-- s生徒8名が展開 -->
+            </select>
+          </div>
+
+          <div id="student-karte-panel" class="hidden space-y-4">
+            <div class="bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-4 rounded-2xl border border-indigo-100 space-y-3">
+              <div class="flex justify-between items-center border-b border-indigo-100/50 pb-2">
+                <span id="karte-student-name" class="font-bold text-xs text-slate-800">生徒名</span>
+                <span class="text-[10px] bg-indigo-600 text-white px-2.5 py-0.5 rounded-full font-bold">指導支援データ</span>
+              </div>
+              <div class="grid grid-cols-3 gap-2 text-center text-[10px]">
+                <div class="bg-white p-2 rounded-xl border shadow-sm">
+                  <span class="text-slate-400 font-bold block mb-0.5">運動実施率</span>
+                  <span id="karte-exercise-rate" class="font-bold text-xs text-indigo-700">--%</span>
+                </div>
+                <div class="bg-white p-2 rounded-xl border shadow-sm">
+                  <span class="text-slate-400 font-bold block mb-0.5">手伝い実施率</span>
+                  <span id="karte-help-rate" class="font-bold text-xs text-rose-700">--%</span>
+                </div>
+                <div class="bg-white p-2 rounded-xl border shadow-sm">
+                  <span class="text-slate-400 font-bold block mb-0.5">平均気分</span>
+                  <span id="karte-avg-mood" class="font-bold text-xs text-amber-600">--</span>
+                </div>
+              </div>
+              <div class="space-y-1.5 text-[11px]">
+                <p class="font-bold text-slate-700 flex items-center gap-1">
+                  <i class="fa-solid fa-heart-pulse text-indigo-600"></i> 生活バランス指標
+                </p>
+                <div class="bg-white/80 rounded-xl p-2.5 border border-slate-100 space-y-1 text-[10px]">
+                  <div class="flex justify-between"><span class="text-slate-500 font-bold">起床最頻値:</span><strong id="karte-common-wake" class="text-slate-800">--</strong></div>
+                  <div class="flex justify-between"><span class="text-slate-500 font-bold">就寝最頻値:</span><strong id="karte-common-sleep" class="text-slate-800">--</strong></div>
+                  <div class="flex justify-between"><span class="text-slate-500 font-bold">スマホ最頻値:</span><strong id="karte-common-screen" class="text-slate-800">--</strong></div>
+                  <div class="flex justify-between"><span class="text-slate-500 font-bold">よくやるお手伝い:</span><strong id="karte-common-help" class="text-slate-800">--</strong></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 先生用：個別グラフ分析 -->
+            <div class="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-4">
+              <p class="text-[11px] font-black text-slate-950 flex items-center gap-1 border-b pb-1">
+                <i class="fa-solid fa-chart-line text-indigo-600"></i> 生活リズムグラフ
+              </p>
+              <div class="space-y-3">
+                <div class="bg-white p-2 rounded-xl border shadow-sm">
+                  <p class="text-[8px] font-bold text-indigo-950 mb-0.5">🛌 就寝 (上=早い)</p>
+                  <div class="h-16 relative"><canvas id="karteSleepLineChart"></canvas></div>
+                </div>
+                <div class="bg-white p-2 rounded-xl border shadow-sm">
+                  <p class="text-[8px] font-bold text-emerald-950 mb-0.5">🌅 起床 (上=早い)</p>
+                  <div class="h-16 relative"><canvas id="karteWakeLineChart"></canvas></div>
+                </div>
+                <div class="bg-white p-2 rounded-xl border shadow-sm">
+                  <p class="text-[8px] font-bold text-amber-950 mb-0.5">😊 気分 (上=元気)</p>
+                  <div class="h-16 relative"><canvas id="karteMoodLineChart"></canvas></div>
+                </div>
+                <div class="bg-white p-2 rounded-xl border shadow-sm">
+                  <p class="text-[8px] font-bold text-purple-950 mb-0.5">📱 スマホ (下=短い)</p>
+                  <div class="h-16 relative"><canvas id="karteScreenLineChart"></canvas></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 中・右：提出履歴詳細テーブル -->
+        <div class="md:col-span-2 bg-white p-5 rounded-3xl border border-slate-100 shadow-md space-y-4">
+          <div class="flex justify-between items-center border-b pb-2">
+            <h3 class="font-black text-slate-800 text-xs md:text-sm flex items-center gap-1.5">
+              <i class="fa-solid fa-list-check text-indigo-500"></i> <span id="student-history-count">提出詳細リスト</span>
+            </h3>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr class="bg-slate-50 text-slate-500 border-b border-slate-100">
+                  <th id="th-name" class="p-2.5 font-bold">生徒名</th>
+                  <th id="th-date" class="p-2.5 font-bold">提出日 / リズム</th>
+                  <th class="p-2.5 font-bold">スマホ</th>
+                  <th class="p-2.5 font-bold">生活・お手伝い・運動</th>
+                  <th class="p-2.5 font-bold">気分</th>
+                </tr>
+              </thead>
+              <tbody id="teacher-detail-table">
+                <!-- 動的挿入 -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- コメント・スタンプ指導パネル -->
+      <div class="bg-white p-5 rounded-3xl border border-slate-100 shadow-xl space-y-4">
+        <h3 class="font-black text-slate-800 text-xs md:text-sm flex items-center gap-2">
+          <i class="fa-solid fa-stamp text-rose-500"></i> はなまるスタンプ・はなまるコメント指導
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-[11px] font-black text-slate-700 mb-1">書き込み対象の提出データ</label>
+            <select id="comment-target-select" class="w-full bg-slate-50 border p-2 rounded-xl font-bold text-xs">
+              <option value="">選択してください</option>
+            </select>
+          </div>
+          <div class="md:col-span-2 flex gap-2 items-end">
+            <div class="flex-1">
+              <label class="block text-[11px] font-black text-slate-700 mb-1">先生のはなまるコメント</label>
+              <input type="text" id="comment-text-input" placeholder="すばらしい早起きですね！💮" class="w-full bg-slate-50 border p-2.5 rounded-xl font-bold text-xs">
+            </div>
+            <button onclick="submitTeacherComment()" class="bg-rose-500 hover:bg-rose-600 text-white font-black px-4 py-2.5 rounded-xl shadow-md transition text-xs">
+              コメント決定
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- おすすめ動画新規登録 -->
+      <div class="bg-white p-5 rounded-3xl border border-slate-100 shadow-xl space-y-4">
+        <h3 class="font-black text-slate-800 text-xs md:text-sm flex items-center gap-2">
+          <i class="fa-solid fa-circle-plus text-indigo-500"></i> 推奨動画の新規追加
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">ジャンル</label>
+            <select id="new-vid-category" class="w-full bg-slate-50 border p-2 rounded-lg">
+              <option>運動</option>
+              <option>手伝い</option>
+              <option>その他</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">タイトル</label>
+            <input type="text" id="new-vid-title" placeholder="室内ラジオ体操など" class="w-full bg-slate-50 border p-2 rounded-lg">
+          </div>
+          <div class="md:col-span-2 flex gap-2 items-end">
+            <div class="flex-1">
+              <label class="block font-bold text-slate-700 mb-1">YouTubeリンク</label>
+              <input type="url" id="new-vid-url" placeholder="https://youtu.be/..." class="w-full bg-slate-50 border p-2 rounded-lg">
+            </div>
+            <button onclick="registerNewVideo()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-lg">
+              動画を登録
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- みんなの絵日記タイムライン -->
+    <div id="timeline-container" class="mt-8 space-y-4">
+      <div class="flex justify-between items-center border-b pb-3 border-amber-200">
+        <h3 class="font-black text-slate-800 text-sm md:text-base flex items-center gap-1.5">
+          <i class="fa-solid fa-book-open text-orange-500"></i> みんなの夏休み写真・ひとこと日記タイムライン
+        </h3>
+        <span class="text-[10px] bg-orange-100 text-orange-800 font-bold px-2.5 py-1 rounded-full">クラス全員に共有中</span>
+      </div>
+      <div id="timeline-posts" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- JS動的追加 -->
+      </div>
+    </div>
+
+    <!-- 先生推奨の動画リスト -->
+    <div id="recommendation-container" class="mt-8 space-y-4">
+      <div class="border-b pb-3 border-slate-200">
+        <h3 class="font-black text-slate-800 text-sm md:text-base flex items-center gap-1.5">
+          <i class="fa-solid fa-video text-rose-500"></i> 先生からのおすすめ動画（YouTube連携）
+        </h3>
+      </div>
+      <div id="recommendation-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- JS動的追加 -->
+      </div>
+    </div>
+
+  </main>
+
+  <!-- JSロジック (デザイン構成を一切崩さず、データバグのみを完全修正) -->
+  <script>
+    let mySleepChart = null;
+    let myWakeChart = null;
+    let myMoodChart = null;
+    let myScreenChart = null;
+    let myHelpChart = null;
+    let myExerciseChart = null;
+
+    let karteSleepChart = null;
+    let karteWakeChart = null;
+    let karteMoodChart = null;
+    let karteScreenChart = null;
+    let karteHelpChart = null;
+    let karteExerciseChart = null;
+
+    let activeRoster = [];
+    let activePosts = [];
+    let activeVideos = [];
+    
+    let selectedBase64 = "";
+    let selectedFileName = "";
+
+    function normalizeName(name) {
+      return name ? name.toString().replace(/[\s\u3000]/g, "").replace("濵", "濱").replace("暁", "堯") : "";
+    }
+
+    function formatTimestamp(ts) {
+      if (!ts) return "";
+      const tsStr = ts.toString().trim();
+      if (/^\d{2}-\d{2}$/.test(tsStr)) return tsStr;
+      const match = tsStr.match(/(\d{1,2})[/\-](\d{1,2})/);
+      if (match) return `${match[1].padStart(2, '0')}-${match[2].padStart(2, '0')}`;
+      const parsedDate = Date.parse(tsStr);
+      if (!isNaN(parsedDate)) {
+        const d = new Date(parsedDate);
+        return `${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      }
+      return tsStr;
+    }
+
+    // 画像ファイル選択
+    function triggerFileInput() {
+      document.getElementById('image-file-input').click();
+    }
+
+    function previewSelectedImage(event) {
+      const file = event.target.files[0];
+      if (file) {
+        selectedFileName = file.name;
+        document.getElementById('selected-file-disp').innerText = `選択ファイル: ${file.name}`;
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          selectedBase64 = e.target.result;
+          document.getElementById('image-preview-element').src = selectedBase64;
+          document.getElementById('preview-container').classList.remove('hidden');
+          document.getElementById('upload-btn-text').innerText = "📸 変更する";
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function clearSelectedImage() {
+      selectedBase64 = "";
+      selectedFileName = "";
+      document.getElementById('image-file-input').value = "";
+      document.getElementById('selected-file-disp').innerText = "選択されていません (空欄でも送信できます)";
+      document.getElementById('preview-container').classList.add('hidden');
+      document.getElementById('upload-btn-text').innerText = "📸 写真を撮る・アルバムから選択";
+    }
+
+    window.onload = function() {
+      const today = new Date();
+      document.getElementById('diary-date').value = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+      try {
+        if (typeof google !== 'undefined' && google.script && google.script.run) {
+          google.script.run.withSuccessHandler(function(res) {
+            if (res && res.success) {
+              activeRoster = res.roster || [];
+              activePosts = res.posts || [];
+              activeVideos = res.videos || [];
+              initPortal();
+            }
+          }).getPortalData();
+        } else {
+          // モック
+          activeRoster = [
+            { id: "shi3640", name: "石川 悠", email: "shi3640@g.kagawa-edu.jp" },
+            { id: "sua5714", name: "太巻 匡堯", email: "sua5714@g.kagawa-edu.jp" },
+            { id: "sba8958", name: "下司 智陽", email: "sba8958@g.kagawa-edu.jp" },
+            { id: "sll0448", name: "小松 心隼", email: "sll0448@g.kagawa-edu.jp" },
+            { id: "sob3382", name: "角田 瀬凪", email: "sob3382@g.kagawa-edu.jp" },
+            { id: "srl1855", name: "高嶋 琉翔", email: "srl1855@g.kagawa-edu.jp" },
+            { id: "sdf6976", name: "濱野 緋菜", email: "sdf6976@g.kagawa-edu.jp" },
+            { id: "shd0542", name: "藤田 允希", email: "shd0542@g.kagawa-edu.jp" }
+          ];
+          initPortal();
+        }
+      } catch (e) {
+        initPortal();
+      }
+    };
+
+    function initPortal() {
+      const nameSelect = document.getElementById('student-name-select');
+      nameSelect.innerHTML = '<option value="" disabled selected>▼ お名前を選んでください</option>';
+      
+      activeRoster.forEach(student => {
+        const opt = document.createElement('option');
+        opt.value = student.name;
+        opt.textContent = student.name;
+        nameSelect.appendChild(opt);
+      });
+
+      // 先生専用メニュー項目を追加
+      const tOpt = document.createElement('option');
+      tOpt.value = "__teacher__";
+      tOpt.textContent = "🔒 【先生専用】管理メニューを開く";
+      nameSelect.appendChild(tOpt);
+
+      renderTimeline();
+      renderVideos();
+    }
+
+    function syncStudentSelection() {
+      const selectedName = document.getElementById('student-name-select').value;
+      
+      if (selectedName === "__teacher__") {
+        document.getElementById('personal-report-area').classList.add('hidden');
+        document.getElementById('password-modal').classList.remove('hidden');
+        return;
+      }
+
+      const matched = activeRoster.find(r => r.name === selectedName);
+      if (matched) {
+        document.getElementById('report-student-title').innerText = matched.name;
+        document.getElementById('personal-report-area').classList.remove('hidden');
+        loadStudentPersonalData(matched.id, matched.name);
+      }
+    }
+
+    function closePasswordModal() {
+      document.getElementById('password-modal').classList.add('hidden');
+      document.getElementById('student-name-select').selectedIndex = 0;
+    }
+
+    function verifyPassword() {
+      const pw = document.getElementById('password-input').value.trim().toLowerCase();
+      
+      if (pw.startsWith('t') || pw === "teacher") {
+        document.getElementById('password-modal').classList.add('hidden');
+        document.getElementById('teacher-container').classList.remove('hidden');
+        
+        // 先生用のカルテリストにお名前リストを展開
+        const karteSelector = document.getElementById('teacher-student-selector');
+        karteSelector.innerHTML = '<option value="all">全員の提出履歴</option>';
+        activeRoster.forEach(s => {
+          const opt = document.createElement('option');
+          opt.value = s.id;
+          opt.textContent = s.name;
+          karteSelector.appendChild(opt);
+        });
+
+        calculateTeacherStats();
+        alert("先生用指導ダッシュボードに接続しました！");
+      } else {
+        alert("パスコードが違います。先生のログインID（t...）を入力してください。");
+      }
+    }
+
+    function loadStudentPersonalData(studentId, name) {
+      const currentNorm = normalizeName(name);
+      const myHistory = activePosts.filter(p => {
+        return (p.studentId === studentId) || (normalizeName(p.studentName) === currentNorm);
+      });
+
+      const tbody = document.getElementById('student-history-table');
+      tbody.innerHTML = '';
+
+      if (myHistory.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400 font-bold italic">過去のきろくはまだありません。きろくをおくってね！</td></tr>`;
+      } else {
+        myHistory.forEach(post => {
+          tbody.innerHTML += `
+            <tr class="border-b border-slate-100 hover:bg-slate-50 font-bold text-[11px]">
+              <td class="p-3 text-slate-700 font-extrabold">${formatTimestamp(post.timestamp)}</td>
+              <td class="p-3">
+                <span class="block text-emerald-600">🌅 ${post.wakeTime}</span>
+                <span class="block text-indigo-600">🛌 ${post.sleepTime}</span>
+              </td>
+              <td class="p-3">
+                <span class="block text-amber-500">😊 気分: ${post.mood}</span>
+                <span class="block text-purple-600">📱 ${post.screenTime}</span>
+              </td>
+              <td class="p-3">
+                <span class="block text-rose-600">🧹 ${post.help}</span>
+                <span class="block text-teal-600">🏃 ${post.exercise}</span>
+              </td>
+              <td class="p-3">
+                <span class="block text-rose-500 italic bg-rose-50 px-2 py-1 rounded-xl text-[10px] inline-block border border-rose-100">
+                  ${post.teacherReview ? '💮 ' + post.teacherReview : '⏳ コメント待ち'}
+                </span>
+              </td>
+            </tr>
+          `;
+        });
+      }
+
+      renderPersonalCharts(myHistory);
+    }
+
+    function renderPersonalCharts(historyList) {
+      const dates = [];
+      const sleepData = [];
+      const wakeData = [];
+      const moodData = [];
+      const screenData = [];
+      const helpCounts = {};
+      const exerciseCounts = {};
+
+      const sorted = [...historyList].reverse();
+
+      sorted.forEach(h => {
+        dates.push(formatTimestamp(h.timestamp));
+
+        const sleepNormalized = normalizeName(h.sleepTime || '');
+        let sVal = 2.5;
+        if (sleepNormalized.includes("8") || sleepNormalized.includes("８")) sVal = 4;
+        else if (sleepNormalized.includes("10") || sleepNormalized.includes("１０")) sVal = 3;
+        else if (sleepNormalized.includes("0") || sleepNormalized.includes("０")) sVal = 2;
+        else if (sleepNormalized.includes("2") || sleepNormalized.includes("２")) sVal = 1;
+        sleepData.push(sVal);
+
+        const wakeNormalized = normalizeName(h.wakeTime || '');
+        let wVal = 2.5;
+        if (wakeNormalized.includes("前")) wVal = 4;
+        else if (wakeNormalized.includes("5") || wakeNormalized.includes("５")) wVal = 3;
+        else if (wakeNormalized.includes("7") || wakeNormalized.includes("７")) wVal = 2;
+        else if (wakeNormalized.includes("9") || wakeNormalized.includes("９")) wVal = 1;
+        wakeData.push(wVal);
+
+        moodData.push(parseInt(h.mood || '3'));
+
+        const screenNormalized = normalizeName(h.screenTime || '');
+        let scrVal = 1;
+        if (screenNormalized.includes("1時間ま") || screenNormalized.includes("１時間ま")) scrVal = 1;
+        else if (screenNormalized.includes("2時間") || screenNormalized.includes("２時間")) scrVal = 2;
+        else if (screenNormalized.includes("3時間") || screenNormalized.includes("３時間")) scrVal = 3;
+        else if (screenNormalized.includes("4時間ま") || screenNormalized.includes("４時間ま")) scrVal = 4;
+        else if (screenNormalized.includes("4時間以") || screenNormalized.includes("４時間以")) scrVal = 5;
+        screenData.push(scrVal);
+
+        if (h.help && h.help !== 'していない') {
+          helpCounts[h.help] = (helpCounts[h.help] || 0) + 1;
+        }
+        if (h.exercise && h.exercise !== 'していない') {
+          exerciseCounts[h.exercise] = (exerciseCounts[h.exercise] || 0) + 1;
+        }
+      });
+
+      const sleepCtx = document.getElementById('mySleepChart').getContext('2d');
+      if (mySleepChart) mySleepChart.destroy();
+      mySleepChart = new Chart(sleepCtx, {
+        type: 'line',
+        data: {
+          labels: dates,
+          datasets: [{ data: sleepData, borderColor: '#6366f1', backgroundColor: 'rgba(99, 102, 241, 0.1)', fill: true, tension: 0.35, borderWidth: 2, pointRadius: 4 }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: {
+              min: 1, max: 4,
+              ticks: {
+                stepSize: 1, font: { size: 8, weight: 'bold' },
+                callback: function(v) {
+                  if (v === 4) return 'PM8-10h';
+                  if (v === 3) return 'PM10-AM0h';
+                  if (v === 2) return 'AM0-2h';
+                  if (v === 1) return 'AM2h以降';
+                  return '';
+                }
+              }
+            }
+          }
+        }
+      });
+
+      const wakeCtx = document.getElementById('myWakeChart').getContext('2d');
+      if (myWakeChart) myWakeChart.destroy();
+      myWakeChart = new Chart(wakeCtx, {
+        type: 'line',
+        data: {
+          labels: dates,
+          datasets: [{ data: wakeData, borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true, tension: 0.35, borderWidth: 2, pointRadius: 4 }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: {
+              min: 1, max: 4,
+              ticks: {
+                stepSize: 1, font: { size: 8, weight: 'bold' },
+                callback: function(v) {
+                  if (v === 4) return 'AM5前';
+                  if (v === 3) return 'AM5-7h';
+                  if (v === 2) return 'AM7-9h';
+                  if (v === 1) return 'AM9h~';
+                  return '';
+                }
+              }
+            }
+          }
+        }
+      });
+
+      const moodCtx = document.getElementById('myMoodChart').getContext('2d');
+      if (myMoodChart) myMoodChart.destroy();
+      myMoodChart = new Chart(moodCtx, {
+        type: 'line',
+        data: {
+          labels: dates,
+          datasets: [{ data: moodData, borderColor: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.1)', fill: true, tension: 0.35, borderWidth: 2, pointRadius: 4 }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: {
+              min: 1, max: 5,
+              ticks: {
+                stepSize: 1, font: { size: 8, weight: 'bold' },
+                callback: function(v) {
+                  if (v === 5) return '元気';
+                  if (v === 3) return '普通';
+                  if (v === 1) return '憂鬱';
+                  return v;
+                }
+              }
+            }
+          }
+        }
+      });
+
+      const screenCtx = document.getElementById('myScreenChart').getContext('2d');
+      if (myScreenChart) myScreenChart.destroy();
+      myScreenChart = new Chart(screenCtx, {
+        type: 'line',
+        data: {
+          labels: dates,
+          datasets: [{ data: screenData, borderColor: '#8b5cf6', backgroundColor: 'rgba(139, 92, 246, 0.1)', fill: true, tension: 0.35, borderWidth: 2, pointRadius: 4 }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: {
+              min: 1, max: 5,
+              ticks: {
+                stepSize: 1, font: { size: 8, weight: 'bold' },
+                callback: function(v) {
+                  if (v === 1) return '1h内';
+                  if (v === 2) return '1-2h';
+                  if (v === 3) return '2-3h';
+                  if (v === 4) return '3-4h';
+                  if (v === 5) return '4h~';
+                  return '';
+                }
+              }
+            }
+          }
+        }
+      });
+
+      const helpCtx = document.getElementById('myHelpChart').getContext('2d');
+      if (myHelpChart) myHelpChart.destroy();
+      const helpLabels = Object.keys(helpCounts);
+      const helpData = Object.values(helpCounts);
+      myHelpChart = new Chart(helpCtx, {
+        type: 'doughnut',
+        data: {
+          labels: helpLabels.length > 0 ? helpLabels : ['まだお手伝いなし'],
+          datasets: [{ data: helpData.length > 0 ? helpData : [1], backgroundColor: helpLabels.length > 0 ? ['#f43f5e', '#fb7185', '#fda4af', '#fecdd3', '#e2e8f0'] : ['#f1f5f9'], borderWidth: 1.5 }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { position: 'bottom', labels: { boxWidth: 8, font: { size: 7.5, weight: 'bold' } } } }
+        }
+      });
+
+      const exerciseCtx = document.getElementById('myExerciseChart').getContext('2d');
+      if (myExerciseChart) myExerciseChart.destroy();
+      const exerciseLabels = Object.keys(exerciseCounts);
+      const exerciseData = Object.values(exerciseCounts);
+      myExerciseChart = new Chart(exerciseCtx, {
+        type: 'doughnut',
+        data: {
+          labels: exerciseLabels.length > 0 ? exerciseLabels : ['まだ運動なし'],
+          datasets: [{ data: exerciseData.length > 0 ? exerciseData : [1], backgroundColor: exerciseLabels.length > 0 ? ['#0d9488', '#14b8a6', '#2dd4bf', '#99f6e4', '#e2e8f0'] : ['#f1f5f9'], borderWidth: 1.5 }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { position: 'bottom', labels: { boxWidth: 8, font: { size: 7.5, weight: 'bold' } } } }
+        }
+      });
+    }
+
+    function submitHomework(event) {
+      event.preventDefault();
+
+      const selectElement = document.getElementById('student-name-select');
+      const selectedName = selectElement.value;
+      if (!selectedName || selectedName === "__teacher__") {
+        alert("あなたのお名前を選択してください");
+        return;
+      }
+
+      const dateVal = document.getElementById('diary-date').value;
+      const matched = activeRoster.find(r => r.name === selectedName);
+      const studentId = matched ? matched.id : "s-unknown";
+
+      const formattedDate = formatTimestamp(dateVal);
+
+      const formData = {
+        studentId: studentId,
+        studentName: selectedName,
+        date: formattedDate,
+        sleepTime: document.getElementById('sleep-time-select').value,
+        wakeTime: document.getElementById('wake-time-select').value,
+        mood: document.querySelector('input[name="mood-radio"]:checked').value,
+        screenTime: document.getElementById('screen-time-select').value,
+        help: document.getElementById('help-select').value,
+        exercise: document.getElementById('exercise-select').value,
+        imageUrl: "",
+        imageData: selectedBase64, // 写真ファイルのBase64バイナリデータ
+        imageFileName: selectedFileName,
+        text: document.getElementById('diary-text').value.trim()
+      };
+
+      const submitBtn = document.getElementById('submit-btn');
+      submitBtn.disabled = true;
+      submitBtn.innerText = "写真を送信しています... ⏳";
+
+      try {
+        if (typeof google !== 'undefined' && google.script && google.script.run) {
+          google.script.run.withSuccessHandler(function(res) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = `<i class="fa-solid fa-paper-plane"></i><span>生活記録と絵日記を提出する</span>`;
+            if (res.success) {
+              alert("写真日記が先生のドライブに保存され、無事に提出されました！💯");
+              document.getElementById('diary-text').value = '';
+              clearSelectedImage();
+              
+              // 再読み込み
+              google.script.run.withSuccessHandler(function(refreshRes) {
+                if (refreshRes && refreshRes.success) {
+                  activePosts = refreshRes.posts || [];
+                  renderTimeline();
+                  loadStudentPersonalData(studentId, selectedName);
+                }
+              }).getPortalData();
+            } else {
+              alert("送信エラー: " + res.error);
+            }
+          }).submitHomeworkFromWeb(formData);
+        } else {
+          // テストモック
+          alert("[ローカルテスト] 送信処理が正常にシミュレートされました！");
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = `<i class="fa-solid fa-paper-plane"></i><span>生活記録と絵日記を提出する</span>`;
+          clearSelectedImage();
+        }
+      } catch (e) {
+        submitBtn.disabled = false;
+        alert("システム通信エラー: " + e.toString());
+      }
+    }
+
+    function renderTimeline() {
+      const container = document.getElementById('timeline-posts');
+      container.innerHTML = '';
+
+      if (activePosts.length === 0) {
+        container.innerHTML = `<div class="col-span-2 text-center text-slate-400 font-bold p-8">タイムラインにはまだ投稿がありません。</div>`;
+        return;
+      }
+
+      activePosts.forEach(post => {
+        const displayDate = formatTimestamp(post.timestamp);
+        let imageTag = "";
+        if (post.imageUrl && post.imageUrl.startsWith("http")) {
+          imageTag = `<img src="${post.imageUrl}" class="timeline-img-btn hover:scale-105 transition duration-200 mt-2" onclick="window.open('${post.imageUrl}')" onerror="this.src='https://placehold.co/120x120/eaeaea/888888?text=📷%20PHOTO'">`;
+        }
+
+        container.innerHTML += `
+          <div class="bg-white rounded-2xl border border-amber-100 overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between p-4">
+            <div class="space-y-2">
+              <div class="flex justify-between items-center border-b pb-1.5 border-slate-100">
+                <h4 class="font-black text-slate-800 text-xs flex items-center gap-1">
+                  <i class="fa-solid fa-user-tag text-orange-400"></i> ${post.studentName}
+                </h4>
+                <span class="text-[10px] bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full font-bold">
+                  😊 気分: ${post.mood}
+                </span>
+              </div>
+              <p class="text-xs text-slate-600 font-bold leading-relaxed">${post.text || '（ひとことなし）'}</p>
+              <div class="text-[10px] text-slate-500 font-bold space-y-0.5 bg-amber-50/20 p-2 rounded-xl">
+                <div>🛌 睡眠: ${post.sleepTime} 〜 ${post.wakeTime}</div>
+                <div>📱 端末: ${post.screenTime}</div>
+                <div>🧹 手伝い: ${post.help} ｜ 🏃 運動: ${post.exercise}</div>
+              </div>
+              ${imageTag}
+            </div>
+            ${post.teacherReview ? `
+              <div class="mt-3 bg-rose-50 border border-rose-100 p-2.5 rounded-xl text-[10px] text-rose-800 font-bold flex items-start gap-1.5">
+                <span>💮</span>
+                <div>
+                  <span class="text-rose-900 block font-black mb-0.5">先生のはなまる:</span>
+                  ${post.teacherReview}
+                </div>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      });
+    }
+
+    function renderVideos() {
+      const list = document.getElementById('recommendation-list');
+      list.innerHTML = '';
+      activeVideos.forEach(vid => {
+        list.innerHTML += `
+          <div class="bg-white p-3.5 rounded-2xl border shadow-sm hover:border-rose-300 transition flex justify-between items-center">
+            <div class="space-y-1">
+              <span class="text-[9px] bg-rose-50 text-rose-600 px-2.5 py-0.5 rounded-full font-bold border border-rose-100">${vid.category}</span>
+              <h4 class="font-black text-slate-800 text-xs">${vid.title}</h4>
+            </div>
+            <a href="${vid.url}" target="_blank" class="bg-red-500 hover:bg-red-600 text-white text-[11px] font-black px-3 py-2 rounded-xl transition flex items-center gap-1">
+              <i class="fa-brands fa-youtube"></i>
+              <span>再生</span>
+            </a>
+          </div>
+        `;
+      });
+    }
+
+    function calculateTeacherStats() {
+      document.getElementById('teacher-total-submissions').innerText = activePosts.length;
+      
+      const commentTarget = document.getElementById('comment-target-select');
+      commentTarget.innerHTML = '<option value="">選択してください</option>';
+
+      activePosts.forEach(post => {
+        const option = document.createElement('option');
+        option.value = post.id;
+        option.textContent = `${formatTimestamp(post.timestamp)} - ${post.studentName} さん`;
+        commentTarget.appendChild(option);
+      });
+
+      showSpecificStudentHistory();
+    }
+
+    function showSpecificStudentHistory() {
+      const selectedId = document.getElementById('teacher-student-selector').value;
+      const tableBody = document.getElementById('teacher-detail-table');
+      const thName = document.getElementById('th-name');
+      const thDate = document.getElementById('th-date');
+      const kartePanel = document.getElementById('student-karte-panel');
+
+      tableBody.innerHTML = '';
+
+      if (selectedId === 'all') {
+        thName.innerText = "生徒名";
+        thDate.innerText = "提出日 / リズム";
+        kartePanel.classList.add('hidden');
+        document.getElementById('student-history-count').innerText = "クラス全体の提出履歴";
+
+        activePosts.forEach(post => {
+          tableBody.innerHTML += `
+            <tr class="border-b hover:bg-slate-50 text-[10.5px] font-bold">
+              <td class="p-2.5 font-extrabold text-slate-800">${post.studentName}</td>
+              <td class="p-2.5 text-slate-500">
+                <span class="block">${formatTimestamp(post.timestamp)}</span>
+                <span class="text-[9px] text-indigo-500">🛌 ${post.sleepTime}</span>
+              </td>
+              <td class="p-2.5 text-slate-600">${post.screenTime}</td>
+              <td class="p-2.5 space-y-0.5">
+                <div class="text-rose-600">🧹 ${post.help}</div>
+                <div class="text-emerald-600">🏃 ${post.exercise}</div>
+              </td>
+              <td class="p-2.5 text-center text-amber-500">${post.mood}</td>
+            </tr>
+          `;
+        });
+        return;
+      }
+
+      thName.innerText = "提出日";
+      thDate.innerText = "起床 / 就寝時間";
+
+      const studentInfo = activeRoster.find(r => r.id === selectedId);
+      const targetNorm = studentInfo ? normalizeName(studentInfo.name) : '';
+
+      const studentHistory = activePosts.filter(p => {
+        return (p.studentId === selectedId) || (normalizeName(p.studentName) === targetNorm);
+      });
+
+      document.getElementById('student-history-count').innerText = `${studentInfo ? studentInfo.name : '生徒'} さんの指導詳細`;
+
+      if (studentHistory.length === 0) {
+        tableBody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400 italic">生活記録はまだ提出されていません。</td></tr>`;
+        kartePanel.classList.add('hidden');
+        return;
+      }
+
+      kartePanel.classList.remove('hidden');
+      document.getElementById('karte-student-name').innerText = `${studentInfo ? studentInfo.name : '生徒'} さんの生活状況`;
+
+      const totalDays = studentHistory.length;
+      let exerciseCount = 0;
+      let helpCount = 0;
+      let moodSum = 0;
+
+      const wakeCounts = {};
+      const sleepCounts = {};
+      const screenCounts = {};
+      const helpDetailCounts = {};
+
+      studentHistory.forEach(h => {
+        if (h.exercise !== 'していない') exerciseCount++;
+        if (h.help !== 'していない') helpCount++;
+        moodSum += parseInt(h.mood || '3');
+
+        wakeCounts[h.wakeTime] = (wakeCounts[h.wakeTime] || 0) + 1;
+        sleepCounts[h.sleepTime] = (sleepCounts[h.sleepTime] || 0) + 1;
+        screenCounts[h.screenTime] = (screenCounts[h.screenTime] || 0) + 1;
+        helpDetailCounts[h.help] = (helpDetailCounts[h.help] || 0) + 1;
+      });
+
+      document.getElementById('karte-exercise-rate').innerText = `${Math.round((exerciseCount / totalDays) * 100)}%`;
+      document.getElementById('karte-help-rate').innerText = `${Math.round((helpCount / totalDays) * 100)}%`;
+      document.getElementById('karte-avg-mood').innerText = (moodSum / totalDays).toFixed(1);
+
+      const getMode = (obj) => {
+        let max = 0;
+        let mode = "回答なし";
+        for (const key in obj) {
+          if (obj[key] > max) { max = obj[key]; mode = key; }
+        }
+        return mode;
+      };
+
+      document.getElementById('karte-common-wake').innerText = getMode(wakeCounts);
+      document.getElementById('karte-common-sleep').innerText = getMode(sleepCounts);
+      document.getElementById('karte-common-screen').innerText = getMode(screenCounts);
+      document.getElementById('karte-common-help').innerText = getMode(helpDetailCounts);
+
+      renderKarteCharts(studentHistory);
+
+      studentHistory.forEach(post => {
+        tableBody.innerHTML += `
+          <tr class="border-b hover:bg-slate-50 font-bold text-[10.5px]">
+            <td class="p-2.5 font-extrabold text-slate-800">${formatTimestamp(post.timestamp)}</td>
+            <td class="p-2.5">
+              <span class="block text-emerald-600">🌅 ${post.wakeTime}</span>
+              <span class="block text-indigo-600">🛌 ${post.sleepTime}</span>
+            </td>
+            <td class="p-2.5 text-slate-600">${post.screenTime}</td>
+            <td class="p-2.5 space-y-0.5">
+              <div class="text-rose-600">🧹 ${post.help}</div>
+              <div class="text-emerald-600">🏃 ${post.exercise}</div>
+            </td>
+            <td class="p-2.5 text-center text-amber-500">${post.mood}</td>
+          </tr>
+        `;
+      });
+    }
+
+    function renderKarteCharts(studentHistory) {
+      const dates = [];
+      const sleepData = [];
+      const wakeData = [];
+      const moodData = [];
+      const screenData = [];
+      const helpCounts = {};
+      const exerciseCounts = {};
+
+      const sortedHistory = [...studentHistory].reverse();
+
+      sortedHistory.forEach(h => {
+        dates.push(formatTimestamp(h.timestamp));
+
+        const sleepNormalized = normalizeName(h.sleepTime || '');
+        let sleepVal = 2.5;
+        if (sleepNormalized.includes("8") || sleepNormalized.includes("８")) sleepVal = 4;
+        else if (sleepNormalized.includes("10") || sleepNormalized.includes("１０")) sleepVal = 3;
+        else if (sleepNormalized.includes("0") || sleepNormalized.includes("０")) sleepVal = 2;
+        else if (sleepNormalized.includes("2") || sleepNormalized.includes("２")) sleepVal = 1;
+        sleepData.push(sleepVal);
+
+        const wakeNormalized = normalizeName(h.wakeTime || '');
+        let wakeVal = 2.5;
+        if (wakeNormalized.includes("前")) wakeVal = 4;
+        else if (wakeNormalized.includes("5") || wakeNormalized.includes("５")) wakeVal = 3;
+        else if (wakeNormalized.includes("7") || wakeNormalized.includes("７")) wakeVal = 2;
+        else if (wakeNormalized.includes("9") || wakeNormalized.includes("９")) wakeVal = 1;
+        wakeData.push(wakeVal);
+
+        moodData.push(parseInt(h.mood || '3'));
+
+        const screenNormalized = normalizeName(h.screenTime || '');
+        let screenVal = 1;
+        if (screenNormalized.includes("1時間ま") || screenNormalized.includes("１時間ま")) screenVal = 1;
+        else if (screenNormalized.includes("2時間") || screenNormalized.includes("２時間")) screenVal = 2;
+        else if (screenNormalized.includes("3時間") || screenNormalized.includes("３時間")) screenVal = 3;
+        else if (screenNormalized.includes("4時間ま") || screenNormalized.includes("４時間ま")) screenVal = 4;
+        else if (screenNormalized.includes("4時間以") || screenNormalized.includes("４時間以")) screenVal = 5;
+        screenData.push(screenVal);
+
+        if (h.help && h.help !== 'していない') {
+          helpCounts[h.help] = (helpCounts[h.help] || 0) + 1;
+        }
+        if (h.exercise && h.exercise !== 'していない') {
+          exerciseCounts[h.exercise] = (exerciseCounts[h.exercise] || 0) + 1;
+        }
+      });
+
+      const sleepCtx = document.getElementById('karteSleepLineChart').getContext('2d');
+      if (karteSleepChart) karteSleepChart.destroy();
+      karteSleepChart = new Chart(sleepCtx, {
+        type: 'line',
+        data: {
+          labels: dates,
+          datasets: [{ data: sleepData, borderColor: '#6366f1', backgroundColor: 'rgba(99, 102, 241, 0.05)', fill: true, tension: 0.35, borderWidth: 1.5, pointRadius: 2.5 }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: {
+              min: 1, max: 4,
+              ticks: {
+                stepSize: 1, font: { size: 7, weight: 'bold' },
+                callback: function(v) {
+                  if (v === 4) return 'PM8-10h';
+                  if (v === 3) return 'PM10-AM0h';
+                  if (v === 2) return 'AM0-2h';
+                  if (v === 1) return 'AM2h~';
+                  return '';
+                }
+              }
+            }
+          }
+        }
+      });
+
+      const wakeCtx = document.getElementById('karteWakeLineChart').getContext('2d');
+      if (karteWakeChart) karteWakeChart.destroy();
+      karteWakeChart = new Chart(wakeCtx, {
+        type: 'line',
+        data: {
+          labels: dates,
+          datasets: [{ data: wakeData, borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.05)', fill: true, tension: 0.35, borderWidth: 1.5, pointRadius: 2.5 }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: {
+              min: 1, max: 4,
+              ticks: {
+                stepSize: 1, font: { size: 7, weight: 'bold' },
+                callback: function(v) {
+                  if (v === 4) return 'AM5前';
+                  if (v === 3) return 'AM5-7h';
+                  if (v === 2) return 'AM7-9h';
+                  if (v === 1) return 'AM9h~';
+                  return '';
+                }
+              }
+            }
+          }
+        }
+      });
+
+      const moodCtx = document.getElementById('karteMoodLineChart').getContext('2d');
+      if (karteMoodChart) karteMoodChart.destroy();
+      karteMoodChart = new Chart(moodCtx, {
+        type: 'line',
+        data: {
+          labels: dates,
+          datasets: [{ data: moodData, borderColor: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.05)', fill: true, tension: 0.35, borderWidth: 1.5, pointRadius: 2.5 }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: {
+              min: 1, max: 5,
+              ticks: {
+                stepSize: 1, font: { size: 7, weight: 'bold' },
+                callback: function(v) {
+                  if (v === 5) return '元気';
+                  if (v === 3) return '普通';
+                  if (v === 1) return '憂鬱';
+                  return v;
+                }
+              }
+            }
+          }
+        }
+      });
+
+      const screenCtx = document.getElementById('karteScreenLineChart').getContext('2d');
+      if (karteScreenChart) karteScreenChart.destroy();
+      karteScreenChart = new Chart(screenCtx, {
+        type: 'line',
+        data: {
+          labels: dates,
+          datasets: [{ data: screenData, borderColor: '#8b5cf6', backgroundColor: 'rgba(139, 92, 246, 0.05)', fill: true, tension: 0.35, borderWidth: 1.5, pointRadius: 2.5 }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: {
+              min: 1, max: 5,
+              ticks: {
+                stepSize: 1, font: { size: 7, weight: 'bold' },
+                callback: function(v) {
+                  if (v === 1) return '1h内';
+                  if (v === 2) return '1-2h';
+                  if (v === 3) return '2-3h';
+                  if (v === 4) return '3-4h';
+                  if (v === 5) return '4h~';
+                  return '';
+                }
+              }
+            }
+          }
+        }
+      });
+
+      const helpCtx = document.getElementById('karteHelpPieChart').getContext('2d');
+      if (karteHelpChart) karteHelpChart.destroy();
+      const helpLabels = Object.keys(helpCounts);
+      const helpData = Object.values(helpCounts);
+      karteHelpChart = new Chart(helpCtx, {
+        type: 'pie',
+        data: {
+          labels: helpLabels.length > 0 ? helpLabels : ['データなし'],
+          datasets: [{ data: helpData.length > 0 ? helpData : [1], backgroundColor: helpLabels.length > 0 ? ['#f43f5e', '#fb7185', '#fda4af', '#cbd5e1'] : ['#f1f5f9'], borderWidth: 1 }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { position: 'right', labels: { boxWidth: 6, font: { size: 6.5, weight: 'bold' } } } }
+        }
+      });
+
+      const exerciseCtx = document.getElementById('karteExercisePieChart').getContext('2d');
+      if (karteExerciseChart) karteExerciseChart.destroy();
+      const exerciseLabels = Object.keys(exerciseCounts);
+      const exerciseData = Object.values(exerciseCounts);
+      karteExerciseChart = new Chart(exerciseCtx, {
+        type: 'pie',
+        data: {
+          labels: exerciseLabels.length > 0 ? exerciseLabels : ['データなし'],
+          datasets: [{ data: exerciseData.length > 0 ? exerciseData : [1], backgroundColor: exerciseLabels.length > 0 ? ['#14b8a6', '#2dd4bf', '#99f6e4', '#cbd5e1'] : ['#f1f5f9'], borderWidth: 1 }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { position: 'right', labels: { boxWidth: 6, font: { size: 6.5, weight: 'bold' } } } }
+        }
+      });
+    }
+
+    function submitTeacherComment() {
+      const targetPostId = document.getElementById('comment-target-select').value;
+      const reviewText = document.getElementById('comment-text-input').value.trim();
+
+      if (!targetPostId || !reviewText) {
+        alert("コメントするデータを選択し、コメントを入力してください");
+        return;
+      }
+
+      const targetPost = activePosts.find(p => p.id === targetPostId);
+      if (targetPost) {
+        try {
+          if (typeof google !== 'undefined' && google.script && google.script.run) {
+            google.script.run.withSuccessHandler(function(res) {
+              if (res.success) {
+                alert("はなまるコメントを書き込みました！💮");
+                document.getElementById('comment-text-input').value = "";
+                
+                // 再読み込み
+                google.script.run.withSuccessHandler(function(refreshRes) {
+                  if (refreshRes && refreshRes.success) {
+                    activePosts = refreshRes.posts || [];
+                    calculateTeacherStats();
+                    renderTimeline();
+                  }
+                }).getPortalData();
+              }
+            }).submitTeacherReviewFromWeb(targetPost.rowNum, reviewText);
+          } else {
+            alert("[ローカルテスト] はなまるコメントを書き込みました！");
+          }
+        } catch (e) {
+          alert("通信エラー: " + e.toString());
+        }
+      }
+    }
+
+    function registerNewVideo() {
+      const category = document.getElementById('new-vid-category').value;
+      const title = document.getElementById('new-vid-title').value.trim();
+      const url = document.getElementById('new-vid-url').value.trim();
+
+      if (!title || !url) {
+        alert("タイトルとURLを入力してください");
+        return;
+      }
+
+      const videoData = {
+        id: "vid_" + Date.now(),
+        category: category,
+        title: title,
+        url: url
+      };
+
+      try {
+        if (typeof google !== 'undefined' && google.script && google.script.run) {
+          google.script.run.withSuccessHandler(function(res) {
+            if (res.success) {
+              alert("おすすめ動画を登録しました！📹");
+              document.getElementById('new-vid-title').value = "";
+              document.getElementById('new-vid-url').value = "";
+              
+              google.script.run.withSuccessHandler(function(refreshRes) {
+                if (refreshRes && refreshRes.success) {
+                  activeVideos = refreshRes.videos || [];
+                  renderVideos();
+                }
+              }).getPortalData();
+            }
+          }).submitNewVideoFromWeb(videoData);
+        } else {
+          alert("[ローカルテスト] おすすめ動画を登録しました！");
+        }
+      } catch (e) {
+        alert("通信エラー: " + e.toString());
+      }
+    }
+  </script>
+</body>
+</html>
